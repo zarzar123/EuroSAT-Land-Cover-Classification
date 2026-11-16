@@ -1,12 +1,9 @@
-
-# ============================================================
 # ESS 5420 - Deep Learning for Earth and Space
 # Project: EuroSAT Land-Cover Classification
 # Dataset Preparation and Preprocessing
 # Weights & Biases Integration
-# ============================================================
 
-# 1. Import libraries
+# Import libraries
 
 import torch
 import wandb
@@ -19,10 +16,7 @@ from torch.utils.data import DataLoader, Subset
 
 import matplotlib.pyplot as plt
 
-
-# ============================================================
-# 2. Configure GPU
-# ============================================================
+# Configure GPU
 
 if torch.backends.mps.is_available():
     device = torch.device("mps")
@@ -34,10 +28,7 @@ else:
 print("PyTorch version:", torch.__version__)
 print("Using device:", device)
 
-
-# ============================================================
-# 3. Define dataset paths
-# ============================================================
+# Dataset paths
 
 PROJECT_DIR = Path(
     "/Users/zarrintasneem/Documents/ESS5480_Project"
@@ -55,14 +46,10 @@ if not DATA_DIR.is_dir():
         f"EuroSAT directory not found: {DATA_DIR}"
     )
 
+# Preprocessing
 
-# ============================================================
-# 4. Define preprocessing
-# ============================================================
-
-# Preserve original 64 x 64 RGB images.
+# Preserve the original 64 x 64 RGB images.
 # Normalize using ImageNet channel statistics.
-# No data augmentation.
 
 NORMALIZATION_MEAN = [0.485, 0.456, 0.406]
 NORMALIZATION_STD = [0.229, 0.224, 0.225]
@@ -76,10 +63,7 @@ transform = transforms.Compose([
     )
 ])
 
-
-# ============================================================
-# 5. Load EuroSAT RGB dataset
-# ============================================================
+# Load EuroSAT RGB dataset
 
 dataset = datasets.ImageFolder(
     root=DATA_DIR,
@@ -106,7 +90,7 @@ assert len(dataset.classes) == 10, (
     "Expected 10 land-cover classes."
 )
 
-# Check for duplicate filenames across class folders.
+# Check for duplicated filenames across the folders.
 
 filenames = [
     Path(path).name
@@ -119,10 +103,7 @@ assert len(filenames) == len(set(filenames)), (
 
 print("Dataset integrity checks passed.")
 
-
-# ============================================================
-# 6. Download TorchGeo predefined split files
-# ============================================================
+# Download TorchGeo files that have the predefined split
 
 BASE_URL = (
     "https://huggingface.co/datasets/torchgeo/eurosat/"
@@ -140,10 +121,7 @@ for split in ["train", "val", "test"]:
 
 print("\nSplit files are ready.")
 
-
-# ============================================================
-# 7. Read the predefined splits
-# ============================================================
+# Read the splits that have been predefined by Helber et al.
 
 def read_split_filenames(split_file):
 
@@ -173,7 +151,6 @@ test_files = read_split_filenames(
     SPLIT_DIR / "eurosat-test.txt"
 )
 
-
 # Check that split files do not overlap.
 
 assert train_files.isdisjoint(val_files)
@@ -182,10 +159,7 @@ assert val_files.isdisjoint(test_files)
 
 print("No duplicate filenames across splits.")
 
-
-# ============================================================
-# 8. Match images to splits
-# ============================================================
+# Match the images to splits
 
 image_lookup = {
     Path(path).name: index
@@ -230,10 +204,7 @@ train_indices = get_indices(train_files)
 val_indices = get_indices(val_files)
 test_indices = get_indices(test_files)
 
-
-# ============================================================
-# 9. Verify train/validation/test partitions
-# ============================================================
+# Verify train/validation/test partitions
 
 print("\n=== Dataset Partitions ===")
 
@@ -254,14 +225,7 @@ assert (
 print("All 27,000 images assigned exactly once.")
 print("No overlapping images between partitions.")
 
-# Note:
-# Filename disjointness does not establish geographic
-# independence between EuroSAT image patches.
-
-
-# ============================================================
-# 10. Create PyTorch datasets
-# ============================================================
+# Create PyTorch datasets
 
 train_dataset = Subset(
     dataset,
@@ -278,10 +242,7 @@ test_dataset = Subset(
     test_indices
 )
 
-
-# ============================================================
-# 11. Create DataLoaders
-# ============================================================
+# Create DataLoaders
 
 BATCH_SIZE = 32
 
@@ -311,10 +272,7 @@ print("Training batches:", len(train_loader))
 print("Validation batches:", len(val_loader))
 print("Testing batches:", len(test_loader))
 
-
-# ============================================================
-# 12. Test one batch on GPU
-# ============================================================
+# Test one batch on GPU
 
 images, labels = next(iter(train_loader))
 
@@ -327,10 +285,7 @@ print("Images shape:", images.shape)
 print("Labels shape:", labels.shape)
 print("Images device:", images.device)
 
-
-# ============================================================
-# 13. Visualize original EuroSAT images
-# ============================================================
+# Visualize original EuroSAT images
 
 raw_dataset = datasets.ImageFolder(
     root=DATA_DIR,
@@ -363,10 +318,7 @@ fig.savefig(
 
 print("Sample image saved:", FIGURE_PATH)
 
-
-# ============================================================
-# 14. Initialize Weights & Biases
-# ============================================================
+# Initialize Weights & Biases
 
 print("\n=== Initializing Weights & Biases ===")
 
@@ -399,10 +351,7 @@ run = wandb.init(
     }
 )
 
-
-# ============================================================
-# 15. Log dataset information to W&B
-# ============================================================
+# Log information about datasets to W&B
 
 print("\nLogging dataset information...")
 
@@ -425,10 +374,7 @@ run.summary["geographic_independence_verified"] = False
 
 run.summary["device"] = str(device)
 
-
-# ============================================================
-# 16. Log class distribution to W&B
-# ============================================================
+# Log class distribution to W&B
 
 class_table = wandb.Table(
     columns=["Land-Cover Class", "Number of Images"]
@@ -445,10 +391,7 @@ run.log({
     "dataset/class_distribution": class_table
 })
 
-
-# ============================================================
-# 17. Log split distribution to W&B
-# ============================================================
+# Log split distribution to W&B
 
 split_table = wandb.Table(
     columns=["Dataset Partition", "Number of Images"]
@@ -473,10 +416,7 @@ run.log({
     "dataset/split_distribution": split_table
 })
 
-
-# ============================================================
-# 18. Log sample images to W&B
-# ============================================================
+# Log sample images to W&B
 
 run.log({
     "dataset/sample_images": wandb.Image(
@@ -487,10 +427,7 @@ run.log({
 
 print("Dataset image uploaded to W&B.")
 
-
-# ============================================================
-# 19. Finish W&B run
-# ============================================================
+# Finish W&B run
 
 print("\n=== W&B Summary ===")
 
@@ -502,10 +439,7 @@ run.finish()
 
 plt.show()
 
-
-# ============================================================
-# 20. Preprocessing completed
-# ============================================================
+# Preprocessing completed
 
 print("\nEuroSAT preprocessing completed successfully!")
 print("Dataset ready for CNN and ResNet-18 training.")
