@@ -1,4 +1,3 @@
-
 """EuroSAT final test-result comparison.
 
 Compares saved Small CNN and ResNet-18 classification metrics.
@@ -32,10 +31,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-
-# ============================================================
-# 1. CONFIGURATION
-# ============================================================
+# CONFIGURATION
 
 PROJECT_DIR = Path(
     "/Users/zarrintasneem/Documents/ESS5480_Project"
@@ -67,10 +63,7 @@ plt.rcParams.update({
 
 start_time = time.perf_counter()
 
-
-# ============================================================
-# 2. VALIDATE INPUTS
-# ============================================================
+# VALIDATE INPUTS
 
 print("\n" + "=" * 75)
 print("EUROSAT FINAL TEST COMPARISON")
@@ -85,10 +78,7 @@ for path in (SMALL_FILE, RESNET_FILE, CONFUSION_FILE):
 
 print("\nAll required input files found.")
 
-
-# ============================================================
-# 3. LOAD CLASSIFICATION REPORTS
-# ============================================================
+# LOAD CLASSIFICATION REPORTS
 
 print("\n[1/7] Loading classification reports...")
 
@@ -171,10 +161,7 @@ test_size = int(small_support.sum())
 print(f"Number of classes: {len(class_names)}")
 print(f"Test samples: {test_size}")
 
-
-# ============================================================
-# 4. COMPARE OVERALL MODEL PERFORMANCE
-# ============================================================
+# COMPARE OVERALL MODEL PERFORMANCE
 
 print("\n[2/7] Comparing overall test performance...")
 
@@ -261,10 +248,7 @@ print(
     ].round(2).to_string(index=False)
 )
 
-
-# ============================================================
-# 5. CLASSWISE PRECISION, RECALL, AND F1
-# ============================================================
+# CLASSWISE PRECISION, RECALL, AND F1
 
 print("\n[3/7] Comparing all 10 land-cover classes...")
 
@@ -319,10 +303,7 @@ display["ResNet18_F1"] *= 100
 
 print(display.round(2).to_string(index=False))
 
-
-# ============================================================
-# 6. IDENTIFY IMPROVEMENTS AND WEAK CLASSES
-# ============================================================
+# IDENTIFY IMPROVEMENTS AND WEAK CLASSES
 
 print("\n[4/7] Identifying key findings...")
 
@@ -362,11 +343,8 @@ for _, row in lowest_resnet.iterrows():
         f"F1 = {row['ResNet18_F1']:.4f}, "
         f"Recall = {row['ResNet18_Recall']:.4f}"
     )
-
-
-# ============================================================
-# 7. ANALYZE CONFUSION PAIRS
-# ============================================================
+    
+# ANALYZE CONFUSION PAIRS
 
 print("\n[5/7] Analyzing classification confusion pairs...")
 
@@ -419,10 +397,7 @@ for model_name in ("Small CNN", "ResNet-18"):
             f"{int(row['count'])} images"
         )
 
-
-# ============================================================
-# 8. GENERATE FIGURES
-# ============================================================
+# GENERATE FIGURES
 
 print("\n[6/7] Generating comparison figures...")
 
@@ -465,7 +440,7 @@ fig.savefig(
 plt.close(fig)
 
 
-# Figure 2: F1 difference in percentage points
+# F1 difference in percentage points
 ordered = comparison.sort_values("F1_Difference_pp")
 
 colors = [
@@ -493,7 +468,7 @@ fig.savefig(
 plt.close(fig)
 
 
-# Figure 3: Precision and recall comparisons
+# Precision and recall comparisons
 ordered = comparison.sort_values("Class")
 
 x = np.arange(len(ordered))
@@ -537,7 +512,7 @@ fig.savefig(
 plt.close(fig)
 
 
-# Figure 4: Top five confusion pairs per model
+# Top five confusion pairs per model
 fig, axes = plt.subplots(
     1,
     2,
@@ -584,10 +559,7 @@ fig.savefig(
 )
 plt.close(fig)
 
-
-# ============================================================
-# 9. WRITE RESEARCH SUMMARY
-# ============================================================
+# RESEARCH SUMMARY
 
 print("\n[7/7] Writing research summary...")
 
@@ -645,11 +617,6 @@ summary_text = "\n".join(summary_lines)
 )
 
 print("\n" + summary_text)
-
-
-# ============================================================
-# 10. FINISH
-# ============================================================
 
 elapsed = time.perf_counter() - start_time
 
