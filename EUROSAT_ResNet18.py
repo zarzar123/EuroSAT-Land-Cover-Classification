@@ -1,11 +1,8 @@
-
-# ============================================================
 # ESS 5420 - Deep Learning for Earth and Space
 # Project: EuroSAT Land-Cover Classification
 # Model 2: ImageNet-Pretrained ResNet-18
-# ============================================================
 
-# 1. Import libraries
+# Import libraries
 
 import random
 import csv
@@ -23,10 +20,7 @@ from torch.utils.data import DataLoader, Subset
 import matplotlib.pyplot as plt
 import wandb
 
-
-# ============================================================
-# 2. Configure random seed and GPU
-# ============================================================
+# Configure random seed and GPU
 
 SEED = 42
 
@@ -44,10 +38,7 @@ else:
 print("PyTorch version:", torch.__version__)
 print("Using device:", device)
 
-
-# ============================================================
-# 3. Define directories
-# ============================================================
+# Define directories
 
 PROJECT_DIR = Path(
     "/Users/zarrintasneem/Documents/ESS5480_Project"
@@ -61,14 +52,10 @@ RESULTS_DIR = PROJECT_DIR / "results"
 MODEL_DIR.mkdir(parents=True, exist_ok=True)
 RESULTS_DIR.mkdir(parents=True, exist_ok=True)
 
-
-# ============================================================
-# 4. Image preprocessing
-# ============================================================
+# Image preprocessing
 
 # Same preprocessing as the small CNN.
-# Original image dimensions: 64 x 64.
-# No augmentation.
+# Original image dimensions: 64 x 64 x 13
 
 transform = transforms.Compose([
     transforms.ToTensor(),
@@ -79,10 +66,7 @@ transform = transforms.Compose([
     )
 ])
 
-
-# ============================================================
-# 5. Load EuroSAT RGB dataset
-# ============================================================
+# Load EuroSAT RGB dataset
 
 dataset = datasets.ImageFolder(
     root=DATA_DIR,
@@ -96,10 +80,7 @@ print("Number of classes:", len(dataset.classes))
 assert len(dataset) == 27000
 assert len(dataset.classes) == 10
 
-
-# ============================================================
-# 6. Load predefined TorchGeo splits
-# ============================================================
+# Load predefined TorchGeo splits by Helber et al., 2017
 
 def read_split_filenames(split_name):
 
@@ -131,10 +112,7 @@ train_files = read_split_filenames("train")
 val_files = read_split_filenames("val")
 test_files = read_split_filenames("test")
 
-
-# ============================================================
-# 7. Match filenames and verify partitions
-# ============================================================
+# Match filenames and verify partitions
 
 image_lookup = {
     Path(path).name: index
@@ -176,10 +154,7 @@ print("Training:", len(train_indices))
 print("Validation:", len(val_indices))
 print("Testing:", len(test_indices))
 
-
-# ============================================================
-# 8. Create DataLoaders
-# ============================================================
+# Create DataLoaders
 
 train_dataset = Subset(dataset, train_indices)
 val_dataset = Subset(dataset, val_indices)
@@ -217,10 +192,7 @@ print("\n=== DataLoaders ===")
 print("Training batches:", len(train_loader))
 print("Validation batches:", len(val_loader))
 
-
-# ============================================================
-# 9. Load pretrained ResNet-18
-# ============================================================
+# Load pretrained ResNet-18
 
 weights = ResNet18_Weights.IMAGENET1K_V1
 
@@ -254,10 +226,7 @@ print("Output classes: 10")
 print("Trainable parameters:", num_parameters)
 print("Model device:", next(model.parameters()).device)
 
-
-# ============================================================
-# 10. Training configuration
-# ============================================================
+# Training configuration
 
 EPOCHS = 20
 LEARNING_RATE = 0.0001
@@ -278,7 +247,7 @@ print("Loss: CrossEntropyLoss")
 print("Fine-tuning: All layers")
 print("Augmentation: None")
 
-# Authenticate once beforehand using `wandb login` in your terminal.
+# Authenticated once beforehand using `wandb login` in the terminal
 # Use the same project as the Small CNN, but a separate run.
 wandb_run = wandb.init(
     project="EuroSAT-CNN-Classification",
@@ -305,10 +274,7 @@ wandb_run = wandb.init(
     },
 )
 
-
-# ============================================================
-# 11. Training function
-# ============================================================
+# Training function
 
 def train_one_epoch(model, loader):
 
@@ -348,10 +314,7 @@ def train_one_epoch(model, loader):
         total_correct / total_samples
     )
 
-
-# ============================================================
-# 12. Validation function
-# ============================================================
+# Validation function
 
 def validate(model, loader):
 
@@ -388,10 +351,7 @@ def validate(model, loader):
         total_correct / total_samples
     )
 
-
-# ============================================================
-# 13. Fine-tune ResNet-18
-# ============================================================
+# Fine-tune ResNet-18
 
 history = []
 
@@ -457,10 +417,7 @@ print("Best epoch:", best_epoch)
 print("Best validation loss:", round(best_val_loss, 4))
 print("Best model:", MODEL_PATH)
 
-
-# ============================================================
-# 14. Save training history
-# ============================================================
+# Save training history
 
 CSV_PATH = (
     RESULTS_DIR / "resnet18_training_history.csv"
@@ -484,10 +441,7 @@ with open(CSV_PATH, "w", newline="") as f:
 
 print("Training history saved:", CSV_PATH)
 
-
-# ============================================================
-# 15. Plot training curves
-# ============================================================
+# Plot training curves
 
 epochs = [row["epoch"] for row in history]
 
@@ -566,10 +520,7 @@ print("Training curves saved:", FIGURE_PATH)
 
 wandb_run.log({"training/curves": wandb.Image(str(FIGURE_PATH))})
 
-
-# ============================================================
-# 16. Final summary
-# ============================================================
+# Final summary
 
 best_row = history[best_epoch - 1]
 
@@ -597,8 +548,3 @@ wandb_run.summary["best_validation_accuracy"] = best_row["val_accuracy"]
 wandb_run.summary["checkpoint_path"] = str(MODEL_PATH)
 print("W&B run URL:", wandb_run.url)
 wandb_run.finish()
-
-# IMPORTANT:
-# Do not evaluate the test set yet.
-# Test evaluation will be performed once
-# both model checkpoints are finalized.
