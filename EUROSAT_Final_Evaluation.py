@@ -1,9 +1,6 @@
-
-# ============================================================
 # ESS 5420 - Deep Learning for Earth and Space
 # EuroSAT Land-Cover Classification
 # Final Test Evaluation: Small CNN vs ResNet-18
-# ============================================================
 
 import csv
 from pathlib import Path
@@ -24,10 +21,7 @@ from sklearn.metrics import (
     precision_recall_fscore_support
 )
 
-
-# ============================================================
-# 1. Configure device and paths
-# ============================================================
+# Configure device and paths
 
 if torch.backends.mps.is_available():
     device = torch.device("mps")
@@ -49,10 +43,7 @@ RESULTS_DIR = PROJECT_DIR / "results"
 
 RESULTS_DIR.mkdir(parents=True, exist_ok=True)
 
-
-# ============================================================
-# 2. Load images with identical preprocessing
-# ============================================================
+# Load images with the same preprocessing
 
 transform = transforms.Compose([
     transforms.ToTensor(),
@@ -76,10 +67,7 @@ assert num_classes == 10
 print("Total images:", len(dataset))
 print("Classes:", class_names)
 
-
-# ============================================================
 # 3. Load the held-out test split
-# ============================================================
 
 def read_split(name):
 
@@ -136,10 +124,7 @@ test_loader = DataLoader(
 
 print("Test images:", len(test_dataset))
 
-
-# ============================================================
-# 4. Recreate the small CNN architecture
-# ============================================================
+# Recreate the small CNN architecture
 
 class SmallCNN(nn.Module):
 
@@ -185,13 +170,10 @@ small_cnn.load_state_dict(
 small_cnn = small_cnn.to(device)
 small_cnn.eval()
 
+# Recreate pretrained ResNet-18 architecture
 
-# ============================================================
-# 5. Recreate pretrained ResNet-18 architecture
-# ============================================================
-
-# No ImageNet download is needed here.
-# The saved checkpoint contains your fine-tuned weights.
+# ImageNet download is not needed here.
+# The saved checkpoint contains the fine-tuned weights.
 
 resnet18 = models.resnet18(weights=None)
 
@@ -211,10 +193,7 @@ resnet18.eval()
 
 print("Both checkpoints loaded successfully.")
 
-
-# ============================================================
-# 6. Generate predictions
-# ============================================================
+# Generate predictions
 
 def get_predictions(model, loader):
 
@@ -243,9 +222,7 @@ def get_predictions(model, loader):
         np.array(predicted_labels)
     )
 
-
-# Final test inference: do not use results for tuning.
-
+# Final test inference: results will not be used for tuning
 y_true, cnn_pred = get_predictions(
     small_cnn,
     test_loader
@@ -260,10 +237,7 @@ assert np.array_equal(y_true, y_true_resnet)
 
 print("\nTest predictions completed.")
 
-
-# ============================================================
-# 7. Calculate overall accuracy
-# ============================================================
+# Calculate overall accuracy
 
 cnn_accuracy = accuracy_score(y_true, cnn_pred)
 
@@ -291,9 +265,7 @@ print(
 )
 
 
-# ============================================================
-# 8. Class-wise precision, recall and F1
-# ============================================================
+# Class-wise precision, recall and F1
 
 labels = list(range(num_classes))
 
@@ -341,10 +313,7 @@ print(
     )
 )
 
-
-# ============================================================
-# 9. Save class-wise comparison
-# ============================================================
+# Save class-wise comparison
 
 comparison_path = (
     RESULTS_DIR / "classwise_comparison.csv"
@@ -382,10 +351,7 @@ with open(comparison_path, "w", newline="") as f:
 
 print("Class-wise comparison saved:", comparison_path)
 
-
-# ============================================================
-# 10. Calculate confusion matrices
-# ============================================================
+# Calculate confusion matrices
 
 cnn_cm = confusion_matrix(
     y_true,
@@ -466,10 +432,7 @@ plot_confusion_matrix(
     "resnet18_confusion_matrix.png"
 )
 
-
-# ============================================================
-# 11. Compare F1-scores visually
-# ============================================================
+# Compare F1-scores visually
 
 x = np.arange(num_classes)
 width = 0.38
@@ -513,10 +476,7 @@ plt.savefig(
 
 plt.close(fig)
 
-
-# ============================================================
-# 12. Identify most common misclassifications
-# ============================================================
+# Identify the most common misclassifications
 
 def print_top_confusions(cm, model_name, top_n=10):
 
@@ -555,10 +515,7 @@ print_top_confusions(
     "ResNet-18"
 )
 
-
-# ============================================================
-# 13. Save overall results
-# ============================================================
+# Save the final results
 
 summary_path = (
     RESULTS_DIR / "final_model_comparison.csv"
@@ -595,10 +552,7 @@ with open(summary_path, "w", newline="") as f:
             report["weighted avg"]["f1-score"]
         ])
 
-
-# ============================================================
-# 14. Final summary
-# ============================================================
+# Final summary
 
 print("\n=== Final Evaluation Completed ===")
 
@@ -609,13 +563,10 @@ print("Model comparison saved.")
 
 print("\nResults directory:", RESULTS_DIR)
 
-
-# ============================================================
-# 15. Pair every prediction with the correct original RGB file
-# ============================================================
+# Pair every prediction with the correct original RGB file
 
 # The test DataLoader uses shuffle=False, and test_dataset was constructed
-# from sorted test_indices. Preserve this ordering when linking filenames.
+# from sorted test_indices. This ordering was preserved when linking filenames.
 from PIL import Image
 
 ERROR_DIR = RESULTS_DIR / "misclassification_analysis"
@@ -673,12 +624,8 @@ for outcome in (
     print(f"{outcome}: {counts[outcome]}")
 assert sum(counts.values()) == len(test_indices)
 
+# Create reproducible image grids (original, unnormalized RGB)
 
-# ============================================================
-# 16. Create reproducible image grids (original, unnormalized RGB)
-# ============================================================
-
-# Select examples reproducibly; never use the test set to tune models.
 example_rng = np.random.default_rng(42)
 
 def save_image_grid(rows, title, filename, n=12):
@@ -732,10 +679,7 @@ for outcome, title in [
         title, f"{outcome}.png"
     )
 
-
-# ============================================================
-# 17. Priority directional class-confusion examples
-# ============================================================
+# Priority directional class-confusion examples
 
 def inspect_confusion(true_class, predicted_class, model_name):
     prediction_key = (
@@ -751,7 +695,6 @@ def inspect_confusion(true_class, predicted_class, model_name):
         rows, f"{model_name.upper()}: {true_class} -> {predicted_class}",
         f"{model_name}_{true_class}_to_{predicted_class}.png"
     )
-
 
 # Keep class labels exactly as returned by ImageFolder.
 priority_pairs = [
@@ -769,10 +712,7 @@ for true_class, predicted_class in priority_pairs:
     inspect_confusion(true_class, predicted_class, "cnn")
     inspect_confusion(true_class, predicted_class, "resnet")
 
-
-# ============================================================
-# 18. Save full directional confusion counts and comparison
-# ============================================================
+# Save full directional confusion counts and comparison
 
 pair_csv = ERROR_DIR / "directional_confusion_comparison.csv"
 with open(pair_csv, "w", newline="", encoding="utf-8") as f:
