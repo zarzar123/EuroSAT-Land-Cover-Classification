@@ -1,7 +1,4 @@
-
 """Evaluate saved EuroSAT models and inspect class-specific errors.
-
-Optimized for Apple Silicon (M1 / 16 GB).
 
 This script:
 1. Validates the original EuroSAT train/validation/test splits.
@@ -43,10 +40,7 @@ except ImportError:
         )
         return iterable
 
-
-# ============================================================
-# 1. CONFIGURATION
-# ============================================================
+# CONFIGURATION
 
 PROJECT_DIR = Path(
     "/Users/zarrintasneem/Documents/ESS5480_Project"
@@ -83,10 +77,7 @@ MAX_BENCHMARK_BATCHES = None
 NORMALIZE_MEAN = [0.485, 0.456, 0.406]
 NORMALIZE_STD = [0.229, 0.224, 0.225]
 
-
-# ============================================================
-# 2. DEVICE SELECTION
-# ============================================================
+# DEVICE SELECTION
 
 if torch.backends.mps.is_available():
     device = torch.device("mps")
@@ -126,10 +117,7 @@ if device.type == "cpu":
 
 overall_start = time.perf_counter()
 
-
-# ============================================================
-# 3. VALIDATE PROJECT FILES
-# ============================================================
+# VALIDATE PROJECT FILES
 
 print("\n[1/8] Checking project files...", flush=True)
 
@@ -154,10 +142,7 @@ OUTPUT_DIR.mkdir(
 
 print("Project files found.", flush=True)
 
-
-# ============================================================
-# 4. DEFINE SMALL CNN
-# ============================================================
+# DEFINE SMALL CNN
 
 class SmallCNN(nn.Module):
     """Architecture matching the original Small CNN script."""
@@ -199,10 +184,7 @@ class SmallCNN(nn.Module):
         x = self.features(x)
         return self.classifier(x)
 
-
-# ============================================================
-# 5. LOAD AND VALIDATE DATASET
-# ============================================================
+# LOAD AND VALIDATE DATASET
 
 print("\n[2/8] Loading EuroSAT dataset...", flush=True)
 
@@ -375,10 +357,7 @@ print(
     flush=True,
 )
 
-
-# ============================================================
-# 6. RESTORE SAVED MODELS
-# ============================================================
+# RESTORE SAVED MODELS
 
 print("\n[3/8] Loading saved checkpoints...", flush=True)
 
@@ -422,7 +401,6 @@ small = restore_weights(
     MODEL_DIR / "small_cnn_best.pth",
 )
 
-
 # weights=None avoids downloading pretrained weights.
 # The trained checkpoint supplies the model weights.
 resnet = models.resnet18(weights=None)
@@ -450,10 +428,7 @@ print(
 print("Small CNN: ready", flush=True)
 print("ResNet-18: ready", flush=True)
 
-
-# ============================================================
-# 7. RUN INFERENCE ON BOTH MODELS
-# ============================================================
+# RUN INFERENCE ON BOTH MODELS
 
 print("\n[4/8] Evaluating models...", flush=True)
 
@@ -572,7 +547,6 @@ with torch.inference_mode():
 
         previous_batch_end = time.perf_counter()
 
-        # Optional short benchmark.
         if (
             MAX_BENCHMARK_BATCHES is not None
             and batch_count >= MAX_BENCHMARK_BATCHES
@@ -586,10 +560,7 @@ inference_time = (
     time.perf_counter() - inference_start
 )
 
-
-# ============================================================
-# 8. CONVERT AND VALIDATE PREDICTIONS
-# ============================================================
+# CONVERT AND VALIDATE PREDICTIONS
 
 truth = np.asarray(
     true_labels,
@@ -693,10 +664,7 @@ print(
     flush=True,
 )
 
-
-# ============================================================
-# 9. SAVE IMAGE-LEVEL PREDICTIONS
-# ============================================================
+# SAVE IMAGE-LEVEL PREDICTIONS
 
 print(
     "\n[5/8] Saving image-level predictions...",
@@ -773,10 +741,7 @@ print(
     flush=True,
 )
 
-
-# ============================================================
-# 10. CLASS METRICS AND CONFUSION MATRICES
-# ============================================================
+# CLASS METRICS AND CONFUSION MATRICES
 
 print(
     "\n[6/8] Calculating classification metrics...",
@@ -885,10 +850,7 @@ confusion_pairs.to_csv(
     index=False,
 )
 
-
-# ============================================================
-# 11. CLASS NAME MATCHING
-# ============================================================
+# CLASS NAME MATCHING
 
 def find_class(fragment):
     """Find the exact EuroSAT class after normalization."""
@@ -922,10 +884,7 @@ def find_class(fragment):
 
     return matches[0]
 
-
-# ============================================================
-# 12. IMAGE GRID FUNCTION
-# ============================================================
+# IMAGE GRID FUNCTION
 
 def image_grid(
     selection,
@@ -1024,10 +983,7 @@ def image_grid(
         flush=True,
     )
 
-
-# ============================================================
-# 13. VISUALIZE SPECIFIC CONFUSION PAIRS
-# ============================================================
+# VISUALIZE SPECIFIC CONFUSION PAIRS
 
 print(
     "\n[7/8] Generating class-specific error figures...",
@@ -1096,10 +1052,7 @@ for true_fragment, predicted_fragment in target_confusions:
             f"{model_name}: {actual} → {predicted}",
         )
 
-
-# ============================================================
-# 14. VISUALIZE MODEL DISAGREEMENTS
-# ============================================================
+# VISUALIZE MODEL DISAGREEMENTS
 
 print(
     "\nGenerating model disagreement figures...",
@@ -1140,10 +1093,7 @@ print(
     flush=True,
 )
 
-
-# ============================================================
-# 15. FINAL COMPARISON SUMMARY
-# ============================================================
+# FINAL COMPARISON SUMMARY
 
 print(
     "\n[8/8] Final evaluation summary...",
@@ -1216,10 +1166,7 @@ print(
     flush=True,
 )
 
-
-# ============================================================
-# 16. SAVE PERFORMANCE REPORT
-# ============================================================
+# SAVE PERFORMANCE REPORT
 
 overall_time = (
     time.perf_counter() - overall_start
